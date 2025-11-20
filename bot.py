@@ -1,13 +1,12 @@
 import discord
 from discord.ext import commands
 import asyncio
-from datetime import datetime, timedelta
 import os
 from flask import Flask
 from threading import Thread
 
 # =======================
-# Flask (keepalive)
+# Flask (pour garder le bot en ligne)
 # =======================
 app = Flask('')
 
@@ -18,29 +17,39 @@ def home():
 def run():
     app.run(host='0.0.0.0', port=8080)
 
-Thread(target=run).start()
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
 
 # =======================
-# Bot
+# Configuration
 # =======================
-TOKEN = os.environ["TOKEN"]
+# Récupération du token depuis les variables d'environnement
+try:
+    TOKEN = os.environ["TOKEN"]
+except KeyError:
+    print("ERREUR: La variable d'environnement 'TOKEN' n'est pas définie.")
+    exit()
+
 CONFIG_DEPLACEMENT = {
     1440038487503147129: 1439648870740131950,
     1440041307279200377: 1439648870740131950,
     1440042361341214910: 1439648870740131950,
     1440042984706936982: 1439648870740131950,
 }
-# ---------------------
 
+# =======================
+# Bot
+# =======================
 intents = discord.Intents.default()
-intents.members = True
+intents.members = True      # IMPORTANT: Cocher "Server Members Intent" sur le site Discord
 intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f'Bot prêt : {bot.user}')
+    print(f'Bot prêt et connecté en tant que : {bot.user}')
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -57,13 +66,16 @@ async def on_voice_state_update(member, before, after):
         
         if salon_arrivee:
             try:
-                print(f"Déplacement de {member.name} depuis {after.channel.name} vers {salon_arrivee.name}")
+                # On déplace le membre
                 await member.move_to(salon_arrivee)
+                print(f"✅ {member.name} déplacé vers {salon_arrivee.name}")
             except discord.errors.Forbidden:
-                print("ERREUR : Je n'ai pas la permission de déplacer ce membre.")
+                print(f"❌ ERREUR : Pas la permission de déplacer {member.name}.")
             except Exception as e:
-                print(f"Erreur : {e}")
+                print(f"⚠️ Erreur imprévue : {e}")
         else:
-            print(f"Erreur : Le salon de destination (ID: {destination_id}) n'existe pas.")
+            print(f"❌ Erreur : Le salon de destination (ID: {destination_id}) est introuvable.")
 
+# Lancement du serveur Web + Bot
+keep_alive()
 bot.run(TOKEN)
