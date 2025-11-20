@@ -36,6 +36,7 @@ CONFIG_DEPLACEMENT = {
     1440041307279200377: 1439648870740131950,
     1440042361341214910: 1439648870740131950,
     1440042984706936982: 1439648870740131950,
+    1441047903555817613: 1439648870740131950,
 }
 
 # =======================
@@ -79,3 +80,4 @@ async def on_voice_state_update(member, before, after):
 # Lancement du serveur Web + Bot
 keep_alive()
 bot.run(TOKEN)
+
